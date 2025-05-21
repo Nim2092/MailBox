@@ -20,7 +20,7 @@ export const createApiClient = (apiKey: string): AxiosInstance => {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
-    withCredentials: true // Enable withCredentials
+    withCredentials: false // Disable withCredentials since we're using wildcard origin
   });
 
   // Request interceptor for logging
