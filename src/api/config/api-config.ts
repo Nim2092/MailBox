@@ -1,7 +1,8 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 
-// Using proxy URL to avoid CORS issues in development
-const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://api.smtp.dev';
+// Sử dụng env variable cho API URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'https://api.smtp.dev');
+const MERCURE_BASE_URL = import.meta.env.VITE_MERCURE_URL || (import.meta.env.DEV ? '/mercure-api' : 'https://mercure.smtp.dev');
 
 // Tạo instance axios với cấu hình mặc định
 export const createApiClient = (apiKey: string): AxiosInstance => {
@@ -18,13 +19,22 @@ export const createApiClient = (apiKey: string): AxiosInstance => {
     headers: {
       'X-API-KEY': apiKey,
       'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
+      'Access-Control-Allow-Headers': 'X-API-KEY, Content-Type, Authorization'
+    },
+    withCredentials: true
   });
 
   // Request interceptor for logging
   client.interceptors.request.use(
     (config) => {
+      // Thêm CORS headers vào mỗi request
+      if (config.headers) {
+        config.headers['Access-Control-Allow-Origin'] = '*';
+        config.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,PATCH,OPTIONS';
+      }
       console.log('🚀 API Request:', config.method?.toUpperCase(), config.url);
       return config;
     },
@@ -77,15 +87,14 @@ export const isSuccessResponse = (status: number): boolean => {
   return status >= 200 && status <= 204;
 };
 
-// Cấu hình cho sự kiện Mercure SSE
-const MERCURE_BASE_HOST = import.meta.env.DEV ? '/mercure-api' : 'https://mercure.smtp.dev';
-export const MERCURE_BASE_URL = `${MERCURE_BASE_HOST}/.well-known/mercure`;
-
 export const createEventSourceConfig = (apiKey: string, accountId: string) => {
   return {
-    url: `${MERCURE_BASE_URL}?topic=/accounts/${accountId}`,
+    url: `${MERCURE_BASE_URL}/.well-known/mercure?topic=/accounts/${accountId}`,
     headers: {
-      Authorization: `Bearer ${apiKey}`
+      Authorization: `Bearer ${apiKey}`,
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
+      'Access-Control-Allow-Headers': 'Authorization, Content-Type'
     }
   };
 }; 
