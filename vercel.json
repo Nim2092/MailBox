@@ -3,20 +3,21 @@
     {
       "source": "/(.*)",
       "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,PUT,POST,DELETE,PATCH,OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "X-API-KEY, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-API-KEY, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
       ]
     }
   ],
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://api.smtp.dev/:path*"
+      "source": "/api/:match*",
+      "destination": "https://api.smtp.dev/:match*"
     },
     {
-      "source": "/mercure-api/:path*",
-      "destination": "https://mercure.smtp.dev/:path*"
+      "source": "/mercure-api/:match*",
+      "destination": "https://mercure.smtp.dev/:match*"
     }
   ]
 } 

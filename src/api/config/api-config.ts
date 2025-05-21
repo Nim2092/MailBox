@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosHeaders } from 'axios';
 
 // Sử dụng env variable cho API URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'https://api.smtp.dev');
@@ -7,7 +7,6 @@ const MERCURE_BASE_URL = import.meta.env.VITE_MERCURE_URL || (import.meta.env.DE
 // Tạo instance axios với cấu hình mặc định
 export const createApiClient = (apiKey: string): AxiosInstance => {
   console.log('Creating API client with base URL:', API_BASE_URL);
-  console.log('API Key provided (first 5 chars):', apiKey ? apiKey.substring(0, 5) + '...' : 'empty');
   
   if (!apiKey || apiKey.trim() === '') {
     console.error('Invalid API key provided to createApiClient');
@@ -19,22 +18,22 @@ export const createApiClient = (apiKey: string): AxiosInstance => {
     headers: {
       'X-API-KEY': apiKey,
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
-      'Access-Control-Allow-Headers': 'X-API-KEY, Content-Type, Authorization'
+      'Content-Type': 'application/json'
     },
-    withCredentials: true
+    withCredentials: false // Tắt withCredentials
   });
 
   // Request interceptor for logging
   client.interceptors.request.use(
     (config) => {
-      // Thêm CORS headers vào mỗi request
-      if (config.headers) {
-        config.headers['Access-Control-Allow-Origin'] = '*';
-        config.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,PATCH,OPTIONS';
+      // Đảm bảo headers tồn tại
+      if (!config.headers) {
+        config.headers = new AxiosHeaders();
       }
+      
+      // Thêm headers cho CORS
+      config.headers['Origin'] = window.location.origin;
+      
       console.log('🚀 API Request:', config.method?.toUpperCase(), config.url);
       return config;
     },
@@ -44,16 +43,14 @@ export const createApiClient = (apiKey: string): AxiosInstance => {
     }
   );
 
-  // Thêm interceptor để xử lý lỗi
+  // Response interceptor
   client.interceptors.response.use(
     (response) => {
       console.log('✅ API Response:', response.status, response.config.url);
-      console.log('Response data:', response.data);
       return response;
     },
     (error: AxiosError) => {
       if (error.response) {
-        // Xử lý các mã lỗi từ API
         switch (error.response.status) {
           case 401:
             console.error('Unauthorized: API key không hợp lệ hoặc bị thiếu');
@@ -91,10 +88,7 @@ export const createEventSourceConfig = (apiKey: string, accountId: string) => {
   return {
     url: `${MERCURE_BASE_URL}/.well-known/mercure?topic=/accounts/${accountId}`,
     headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
-      'Access-Control-Allow-Headers': 'Authorization, Content-Type'
+      Authorization: `Bearer ${apiKey}`
     }
   };
 }; 
