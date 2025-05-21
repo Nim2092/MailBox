@@ -31,9 +31,6 @@ export const createApiClient = (apiKey: string): AxiosInstance => {
         config.headers = new AxiosHeaders();
       }
       
-      // Thêm headers cho CORS
-      config.headers['Origin'] = window.location.origin;
-      
       console.log('🚀 API Request:', config.method?.toUpperCase(), config.url);
       return config;
     },
