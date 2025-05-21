@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosInstance, AxiosHeaders } from 'axios';
 
 // Sử dụng env variable cho API URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'https://api.smtp.dev');
-const MERCURE_BASE_URL = import.meta.env.VITE_MERCURE_URL || (import.meta.env.DEV ? '/mercure-api' : 'https://mercure.smtp.dev');
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const MERCURE_BASE_URL = import.meta.env.VITE_MERCURE_URL || '/mercure-api';
 
 // Tạo instance axios với cấu hình mặc định
 export const createApiClient = (apiKey: string): AxiosInstance => {
@@ -20,7 +20,7 @@ export const createApiClient = (apiKey: string): AxiosInstance => {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
-    withCredentials: false // Tắt withCredentials
+    withCredentials: true // Enable withCredentials
   });
 
   // Request interceptor for logging

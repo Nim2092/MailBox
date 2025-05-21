@@ -4,7 +4,7 @@
       "source": "/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Credentials", "value": "true" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Origin", "value": "$ORIGIN" },
         { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
         { "key": "Access-Control-Allow-Headers", "value": "X-API-KEY, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
       ]
@@ -19,5 +19,12 @@
       "source": "/mercure-api/:match*",
       "destination": "https://mercure.smtp.dev/:match*"
     }
-  ]
+  ],
+  "env": {
+    "ORIGIN": {
+      "development": "http://localhost:3000",
+      "preview": "https://mail-box-git-master-nim2092s-projects.vercel.app",
+      "production": "https://mail-box-pearl.vercel.app"
+    }
+  }
 } 
