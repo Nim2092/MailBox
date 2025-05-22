@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosHeaders } from 'axios';
 
-// Sử dụng env variable cho API URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// Sử dụng proxy endpoint cho mọi môi trường
+const API_BASE_URL = '/api/proxy';
 const MERCURE_BASE_URL = import.meta.env.VITE_MERCURE_URL || '/mercure-api';
 
 // Tạo instance axios với cấu hình mặc định

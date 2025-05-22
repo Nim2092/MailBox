@@ -1,8 +1,10 @@
 export default async function handler(req: any, res: any) {
   const url = 'https://api.smtp.dev' + (req.url?.replace('/api/proxy', '') || '');
+  // Loại bỏ các header không hợp lệ
+  const { host, connection, ...headers } = req.headers;
   const response = await fetch(url, {
     method: req.method,
-    headers: { ...req.headers, host: undefined }, // loại bỏ host để tránh lỗi
+    headers,
     body: req.method !== 'GET' && req.method !== 'HEAD' ? req.body : undefined,
   });
 
