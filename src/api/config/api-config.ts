@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosHeaders } from 'axios';
 
-// Sử dụng proxy endpoint cho mọi môi trường
-const API_BASE_URL = '/api/proxy';
+// Sử dụng base URL trực tiếp đến API ngoài
+const API_BASE_URL = 'https://api.smtp.dev';
 const MERCURE_BASE_URL = import.meta.env.VITE_MERCURE_URL || '/mercure-api';
 
 // Tạo instance axios với cấu hình mặc định
