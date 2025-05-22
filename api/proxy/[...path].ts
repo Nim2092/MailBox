@@ -1,6 +1,7 @@
 export default async function handler(req: any, res: any) {
   // Lấy path động và query string
-  const path = req.url.replace(/^\/api\/proxy/, '') || '';
+  const match = req.url.match(/^\/api\/proxy(\/.*)?$/);
+  const path = match && match[1] ? match[1] : '';
   const url = 'https://api.smtp.dev' + path + (req._parsedUrl?.search || '');
 
   // Loại bỏ các header không hợp lệ
