@@ -1,3 +1,9 @@
+export const config = {
+  api: {
+    bodyParser: false, // Tắt bodyParser để tự xử lý stream
+  },
+};
+
 export default async function handler(req: any, res: any) {
   // Lấy path động và query string
   const match = req.url.match(/^\/api\/proxy(\/.*)?$/);
@@ -6,10 +12,22 @@ export default async function handler(req: any, res: any) {
 
   // Loại bỏ các header không hợp lệ
   const { host, connection, ...headers } = req.headers;
+
+  // Đọc body nếu là POST/PUT/PATCH
+  let body: Buffer | undefined = undefined;
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    body = await new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (chunk: Buffer) => chunks.push(chunk));
+      req.on('end', () => resolve(Buffer.concat(chunks)));
+      req.on('error', reject);
+    });
+  }
+
   const response = await fetch(url, {
     method: req.method,
     headers,
-    body: req.method !== 'GET' && req.method !== 'HEAD' ? req.body : undefined,
+    body: body === undefined ? undefined : body,
   });
 
   const data = await response.arrayBuffer();
