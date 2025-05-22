@@ -9,15 +9,5 @@
         { "key": "Access-Control-Allow-Headers", "value": "X-API-KEY, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
       ]
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/:match*",
-      "destination": "https://api.smtp.dev/:match*"
-    },
-    {
-      "source": "/mercure-api/:match*",
-      "destination": "https://mercure.smtp.dev/:match*"
-    }
   ]
 } 
