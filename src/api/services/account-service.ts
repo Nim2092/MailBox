@@ -37,22 +37,20 @@ export class AccountService {
     try {
       const response = await this.client.get('/accounts', { params });
       let data = response.data;
-      // Nếu API trả về mảng, tự wrap lại
+      // Nếu API trả về mảng, chỉ wrap lại thành object Hydra
       if (Array.isArray(data)) {
-        const totalItems = data.length;
-        const paged = data.slice((page - 1) * itemsPerPage, page * itemsPerPage);
         data = {
           "@context": "/contexts/Account",
           "@id": `/accounts?page=${page}`,
           "@type": "Collection",
-          "totalItems": totalItems,
-          "member": paged,
+          "totalItems": data.length,
+          "member": data,
           "view": {
             "@id": `/accounts?page=${page}`,
             "@type": "PartialCollectionView",
             "first": "/accounts?page=1",
-            "last": `/accounts?page=${Math.ceil(totalItems / itemsPerPage)}`,
-            "next": page < Math.ceil(totalItems / itemsPerPage) ? `/accounts?page=${page + 1}` : undefined
+            "last": `/accounts?page=1`,
+            "next": undefined
           },
           "search": {
             "@type": "IriTemplate",
