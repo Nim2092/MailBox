@@ -18,29 +18,55 @@ export class AccountService {
    * @param address Lọc theo địa chỉ email
    * @param isActive Lọc theo trạng thái active
    * @param page Số trang
+   * @param itemsPerPage Số lượng mục trên mỗi trang
    * @returns Danh sách tài khoản
    */
   async listAccounts(
     address?: string,
     isActive?: boolean,
-    page?: number
-  ): Promise<CollectionResponse<Account> | Account[]> {
+    page: number = 1,
+    itemsPerPage: number = 10
+  ): Promise<CollectionResponse<Account>> {
     const params: Record<string, any> = {};
     if (address !== undefined) params.address = address;
     if (isActive !== undefined) params.isActive = isActive;
-    if (page !== undefined) params.page = page;
+    params.page = page;
+    params.itemsPerPage = itemsPerPage;
 
     console.log('AccountService.listAccounts - Request URL:', '/accounts', 'Params:', params);
     try {
       const response = await this.client.get('/accounts', { params });
-      console.log('AccountService.listAccounts - Response:', response.data);
-      
-      // Handle the case when API returns array directly instead of collection
-      if (Array.isArray(response.data)) {
-        return response.data;
+      let data = response.data;
+      // Nếu API trả về mảng, tự wrap lại
+      if (Array.isArray(data)) {
+        const totalItems = data.length;
+        const paged = data.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+        data = {
+          "@context": "/contexts/Account",
+          "@id": `/accounts?page=${page}`,
+          "@type": "Collection",
+          "totalItems": totalItems,
+          "member": paged,
+          "view": {
+            "@id": `/accounts?page=${page}`,
+            "@type": "PartialCollectionView",
+            "first": "/accounts?page=1",
+            "last": `/accounts?page=${Math.ceil(totalItems / itemsPerPage)}`,
+            "next": page < Math.ceil(totalItems / itemsPerPage) ? `/accounts?page=${page + 1}` : undefined
+          },
+          "search": {
+            "@type": "IriTemplate",
+            "template": "/accounts{?address,isActive}",
+            "variableRepresentation": "BasicRepresentation",
+            "mapping": [
+              { "@type": "IriTemplateMapping", "variable": "address", "property": "address", "required": false },
+              { "@type": "IriTemplateMapping", "variable": "isActive", "property": "isActive", "required": false }
+            ]
+          }
+        };
       }
-      
-      return response.data;
+      // Nếu đã đúng chuẩn Hydra thì giữ nguyên
+      return data;
     } catch (error) {
       console.error('AccountService.listAccounts - Error:', error);
       throw error;

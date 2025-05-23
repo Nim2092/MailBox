@@ -49,6 +49,7 @@ interface AppState {
   apiKey: string
   client: SmtpDevClient | null
   accounts: Account[]
+  accountsHydra?: import('@/api/types').CollectionResponse<Account> | null
   domains: Domain[]
   currentAccount: Account | null
   currentMailbox: Mailbox | null
@@ -60,7 +61,7 @@ interface AppState {
   setApiKey: (key: string) => SmtpDevClient | null
   clearApiKey: () => void
   fetchDomains: () => Promise<void>
-  fetchAccounts: () => Promise<void>
+  fetchAccounts: (page?: number, address?: string, isActive?: boolean) => Promise<void>
   fetchMailboxes: (accountId: string) => Promise<Mailbox[]>
   fetchMessages: (accountId: string, mailboxId: string) => Promise<Message[]>
   fetchMessage: (accountId: string, mailboxId: string, messageId: string) => Promise<void>
@@ -80,6 +81,7 @@ export const useAppStore = create<AppState>()(
       apiKey: '',
       client: null,
       accounts: [],
+      accountsHydra: undefined,
       domains: [],
       currentAccount: null,
       currentMailbox: null,
@@ -136,6 +138,7 @@ export const useAppStore = create<AppState>()(
           apiKey: '', 
           client: null, 
           accounts: [], 
+          accountsHydra: undefined, 
           domains: [], 
           currentAccount: null, 
           currentMailbox: null, 
@@ -186,7 +189,7 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      fetchAccounts: async () => {
+      fetchAccounts: async (page = 1, address?: string, isActive?: boolean) => {
         const { client, initializeClient } = get()
         let activeClient = client;
         
@@ -205,24 +208,13 @@ export const useAppStore = create<AppState>()(
         set({ loading: true, error: null })
         try {
           console.log('Fetching accounts...');
-          const accountsData = await activeClient.listAccounts()
-          console.log('Accounts fetched successfully:', accountsData);
-          
-          // Handle different response structures
-          if (Array.isArray(accountsData)) {
-            // Direct array response
-            set({ accounts: accountsData });
-          } else if (accountsData && accountsData.member && Array.isArray(accountsData.member)) {
-            // Response with member property containing array
-            set({ accounts: accountsData.member });
-          } else {
-            // Empty or unexpected response
-            console.warn('Unexpected accounts response format:', accountsData);
-            set({ accounts: [] });
-          }
+          // Truyền address, isActive, page vào listAccounts
+          const accountsHydra = await activeClient.listAccounts(address, isActive, page);
+          console.log('Accounts fetched successfully:', accountsHydra);
+          set({ accounts: accountsHydra.member, accountsHydra });
         } catch (error) {
           console.error('Error fetching accounts:', error);
-          set({ error: 'Failed to fetch accounts', accounts: [] })
+          set({ error: 'Failed to fetch accounts', accounts: [], accountsHydra: null })
         } finally {
           set({ loading: false })
         }
@@ -477,6 +469,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({ 
         apiKey: state.apiKey,
         accounts: state.accounts,
+        accountsHydra: state.accountsHydra,
         domains: state.domains
       }),
       onRehydrateStorage: () => (state) => {

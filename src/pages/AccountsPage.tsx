@@ -5,6 +5,7 @@ import { useAppStore } from '../store'
 const AccountsPage: React.FC = () => {
   const { 
     accounts, 
+    accountsHydra,
     fetchAccounts, 
     createAccount, 
     deleteAccount, 
@@ -29,28 +30,26 @@ const AccountsPage: React.FC = () => {
   // Search and pagination states
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
 
-  // Filter accounts based on search term
-  const filteredAccounts = accounts.filter(account =>
-    account.address.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Lấy tổng số trang từ accountsHydra (nếu backend trả về page size, có thể dùng, nếu không thì bỏ)
+  const totalPages = accountsHydra && accountsHydra.view && accountsHydra.view.last
+    ? Number(accountsHydra.view.last.split('page=')[1])
+    : 1;
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage)
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentAccounts = filteredAccounts.slice(indexOfFirstItem, indexOfLastItem)
+  // Gọi fetchAccounts khi search hoặc đổi trang
+  useEffect(() => {
+    fetchAccounts(currentPage, searchTerm || undefined)
+  }, [currentPage, searchTerm])
 
-  // Handle page change
+  // Reset về trang 1 khi searchTerm thay đổi
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
+    setCurrentPage(1)
+  }
+
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber)
   }
-
-  // Reset to first page when search term changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm])
 
   useEffect(() => {
     // Initialize data on component mount
@@ -72,7 +71,7 @@ const AccountsPage: React.FC = () => {
         }
         
         // Fetch data
-        await Promise.all([fetchAccounts(), fetchDomains()]);
+        await fetchDomains();
       } catch (error) {
         console.error('Error initializing data:', error);
         setPageError('Failed to load accounts data. Please try refreshing the page.');
@@ -82,7 +81,7 @@ const AccountsPage: React.FC = () => {
     };
     
     initializeData();
-  }, [apiKey, client, fetchAccounts, fetchDomains, initializeClient]);
+  }, [apiKey, client, fetchDomains, initializeClient]);
 
   const handleViewAccount = (account: any) => {
     navigate(`/accounts/${account.id}`)
@@ -157,7 +156,7 @@ const AccountsPage: React.FC = () => {
             style={{ paddingLeft: '2.5rem' }}
             placeholder="Search accounts..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,7 +183,7 @@ const AccountsPage: React.FC = () => {
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 dark:border-blue-400"></div>
           <p className="mt-2 text-gray-600 dark:text-gray-400">Loading accounts...</p>
         </div>
-      ) : currentAccounts.length === 0 ? (
+      ) : accounts.length === 0 ? (
         <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <p className="text-gray-600 dark:text-gray-400">
             {searchTerm ? 'No accounts found matching your search.' : 'No email accounts found. Create one to get started.'}
@@ -214,7 +213,7 @@ const AccountsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {currentAccounts.map((account) => (
+                {accounts.map((account) => (
                   <tr key={account.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       {account.address}
